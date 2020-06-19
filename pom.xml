@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>custom-keycloak-spi</artifactId>
+  <build>
+    <plugins>
+      <!-- Plug-in for Compiled to the specified JDK version -->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <!-- encoding -->
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <showWarnings>true</showWarnings>
+          <!-- Source code jdk version -->
+          <source>${jdk.version}</source>
+          <!-- target class jdk version -->
+          <target>${jdk.version}</target>
+        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>${maven-compiler-plugin.version}</version>
+      </plugin>
+    </plugins>
+
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+  </build>
+
+
+  <groupId>com.cashzhang27</groupId>
+  <modelVersion>4.0.0</modelVersion>
+
+  <packaging>pom</packaging>
+
+  <pluginRepositories>
+    <!-- aliyun agent spring plugin repository -->
+    <pluginRepository>
+      <id>spring-plugin</id>
+      <name>spring-plugin</name>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <url>https://maven.aliyun.com/repository/spring-plugin</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <profiles>
+    <profile>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <id>dev</id>
+      <properties>
+        <spring.profiles.active>dev</spring.profiles.active>
+      </properties>
+    </profile>
+    <profile>
+      <id>test</id>
+      <properties>
+        <spring.profiles.active>test</spring.profiles.active>
+      </properties>
+    </profile>
+    <profile>
+      <id>prod</id>
+      <properties>
+        <spring.profiles.active>prod</spring.profiles.active>
+      </properties>
+    </profile>
+  </profiles>
+
+  <properties>
+    <!-- Compiler settings properties -->
+    <jdk.version>1.8</jdk.version>
+    <maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <repositories>
+    <!-- aliyun agent central and jcenter repository -->
+    <repository>
+      <id>public</id>
+      <name>central and jcenter</name>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <url>https://maven.aliyun.com/repository/public</url>
+    </repository>
+    <!-- aliyun agent spring repository -->
+    <repository>
+      <id>spring</id>
+      <name>Spring Releases</name>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <url>https://maven.aliyun.com/repository/spring</url>
+    </repository>
+  </repositories>
+
+  <version>1.0-SNAPSHOT</version>
+
+</project>

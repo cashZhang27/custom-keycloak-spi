@@ -1,6 +1,7 @@
 package org.keycloak.social.alipay;
 
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
+import org.keycloak.models.IdentityProviderModel;
 
 /**
  * ALiPayOAuth2IdentityProviderConfig.
@@ -13,7 +14,12 @@ public class ALiPayOAuth2IdentityProviderConfig extends OAuth2IdentityProviderCo
 
   private static final long serialVersionUID = 5730387260641871357L;
 
-  public ALiPayOAuth2IdentityProviderConfig() {}
+  public ALiPayOAuth2IdentityProviderConfig() {
+  }
+
+  public ALiPayOAuth2IdentityProviderConfig(IdentityProviderModel model) {
+    super(model);
+  }
 
   public String getKey() {
     return this.getConfig().get("key");

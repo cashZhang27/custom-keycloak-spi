@@ -28,7 +28,7 @@ public class ALiPayIdentityProviderFactory
   public ALiPayIdentityProvider create(
       KeycloakSession keycloakSession, IdentityProviderModel identityProviderModel) {
     return new ALiPayIdentityProvider(
-        keycloakSession, new OAuth2IdentityProviderConfig(identityProviderModel));
+        keycloakSession, new ALiPayOAuth2IdentityProviderConfig(identityProviderModel));
   }
 
   @Override

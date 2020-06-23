@@ -31,7 +31,46 @@
   </build>
 
 
+  <dependencies>
+    <dependency>
+      <artifactId>keycloak-core</artifactId>
+      <groupId>org.keycloak</groupId>
+      <scope>provided</scope>
+      <version>${keycloak.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+      <version>${jboss.logging.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <artifactId>keycloak-server-spi-private</artifactId>
+      <groupId>org.keycloak</groupId>
+      <scope>provided</scope>
+      <version>${keycloak.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>keycloak-services</artifactId>
+      <groupId>org.keycloak</groupId>
+      <scope>provided</scope>
+      <version>${keycloak.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>keycloak-server-spi</artifactId>
+      <groupId>org.keycloak</groupId>
+      <scope>provided</scope>
+      <version>${keycloak.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${apache.httpcomponents.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
   <groupId>com.cashzhang27</groupId>
+
   <modelVersion>4.0.0</modelVersion>
 
   <packaging>pom</packaging>
@@ -76,12 +115,13 @@
   </profiles>
 
   <properties>
-    <!-- Compiler settings properties -->
+    <apache.httpcomponents.version>4.5.11</apache.httpcomponents.version>
     <jdk.version>1.8</jdk.version>
+    <jboss.logging.version>3.4.1.Final</jboss.logging.version>
+
+    <keycloak.version>10.0.2</keycloak.version>
     <maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- keycloak -->
-    <keycloak.version>10.0.2</keycloak.version>
   </properties>
 
   <repositories>
@@ -110,27 +150,6 @@
       <url>https://maven.aliyun.com/repository/spring</url>
     </repository>
   </repositories>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.keycloak</groupId>
-      <artifactId>keycloak-server-spi-private</artifactId>
-      <version>${keycloak.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.keycloak</groupId>
-      <artifactId>keycloak-services</artifactId>
-      <version>${keycloak.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.keycloak</groupId>
-      <artifactId>keycloak-server-spi</artifactId>
-      <version>${keycloak.version}</version>
-      <scope>provided</scope>
-    </dependency>
-  </dependencies>
 
   <version>1.0-SNAPSHOT</version>
 

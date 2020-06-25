@@ -39,10 +39,10 @@
       <version>${keycloak.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.jboss.logging</groupId>
       <artifactId>jboss-logging</artifactId>
-      <version>${jboss.logging.version}</version>
+      <groupId>org.jboss.logging</groupId>
       <scope>provided</scope>
+      <version>${jboss.logging.version}</version>
     </dependency>
     <dependency>
       <artifactId>keycloak-server-spi-private</artifactId>
@@ -63,10 +63,10 @@
       <version>${keycloak.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>${apache.httpcomponents.version}</version>
+      <groupId>org.apache.httpcomponents</groupId>
       <scope>provided</scope>
+      <version>${apache.httpcomponents.version}</version>
     </dependency>
   </dependencies>
   <groupId>com.cashzhang27</groupId>
@@ -116,8 +116,8 @@
 
   <properties>
     <apache.httpcomponents.version>4.5.11</apache.httpcomponents.version>
-    <jdk.version>1.8</jdk.version>
     <jboss.logging.version>3.4.1.Final</jboss.logging.version>
+    <jdk.version>1.8</jdk.version>
 
     <keycloak.version>10.0.2</keycloak.version>
     <maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>

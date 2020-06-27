@@ -10,19 +10,19 @@ import org.keycloak.models.IdentityProviderModel;
  * @version v1.0
  * @since 2020/06/23 15:29
  */
-public class ALiPayOAuth2IdentityProviderConfig extends OAuth2IdentityProviderConfig {
+public class AlipayOAuth2IdentityProviderConfig extends OAuth2IdentityProviderConfig {
 
   private static final long serialVersionUID = 5730387260641871357L;
 
-  public ALiPayOAuth2IdentityProviderConfig() {
+  public AlipayOAuth2IdentityProviderConfig() {
   }
 
-  public ALiPayOAuth2IdentityProviderConfig(IdentityProviderModel model) {
+  public AlipayOAuth2IdentityProviderConfig(IdentityProviderModel model) {
     super(model);
   }
 
-  public String getKey() {
-    return this.getConfig().get("key");
+  public String getKey(String key) {
+    return this.getConfig().get(key);
   }
 
   public void setKey(String key) {

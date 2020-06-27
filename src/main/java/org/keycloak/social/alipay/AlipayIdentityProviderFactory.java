@@ -13,9 +13,9 @@ import org.keycloak.models.KeycloakSession;
  * @version v1.0
  * @since 2020/06/19 15:26
  */
-public class ALiPayIdentityProviderFactory
-    extends AbstractIdentityProviderFactory<ALiPayIdentityProvider>
-    implements SocialIdentityProviderFactory<ALiPayIdentityProvider> {
+public class AlipayIdentityProviderFactory
+    extends AbstractIdentityProviderFactory<AlipayIdentityProvider>
+    implements SocialIdentityProviderFactory<AlipayIdentityProvider> {
 
   public static final String PROVIDER_ID = "alipay";
 
@@ -25,10 +25,10 @@ public class ALiPayIdentityProviderFactory
   }
 
   @Override
-  public ALiPayIdentityProvider create(
+  public AlipayIdentityProvider create(
       KeycloakSession keycloakSession, IdentityProviderModel identityProviderModel) {
-    return new ALiPayIdentityProvider(
-        keycloakSession, new ALiPayOAuth2IdentityProviderConfig(identityProviderModel));
+    return new AlipayIdentityProvider(
+        keycloakSession, new AlipayOAuth2IdentityProviderConfig(identityProviderModel));
   }
 
   @Override

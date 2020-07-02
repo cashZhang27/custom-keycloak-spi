@@ -22,8 +22,8 @@ import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
 import org.keycloak.broker.provider.AuthenticationRequest;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
+import org.keycloak.broker.provider.IdentityProvider;
 import org.keycloak.broker.provider.util.SimpleHttp;
-import org.keycloak.broker.social.SocialIdentityProvider;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.events.Errors;
 import org.keycloak.events.EventBuilder;
@@ -32,6 +32,7 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.services.ErrorPage;
 import org.keycloak.services.messages.Messages;
+import org.keycloak.services.resources.admin.info.ServerInfoAdminResource;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.vault.VaultStringSecret;
 import twitter4j.Twitter;
@@ -40,6 +41,9 @@ import twitter4j.auth.RequestToken;
 
 /**
  * ALiPayIdentityProvider.
+ * 实现IdentityProvider为theme\base\admin\resources\js\controllers\realm.js中removeUsedSocial方法及 {@link
+ * ServerInfoAdminResource#setIdentityProviders(org.keycloak.representations.info.ServerInfoRepresentation)}
+ * 可重复新增身份提供者.
  *
  * @author Cash Zhang
  * @version v1.0
@@ -47,7 +51,7 @@ import twitter4j.auth.RequestToken;
  */
 public class AlipayIdentityProvider
     extends AbstractOAuth2IdentityProvider<AlipayOAuth2IdentityProviderConfig>
-    implements SocialIdentityProvider<AlipayOAuth2IdentityProviderConfig> {
+    implements IdentityProvider<AlipayOAuth2IdentityProviderConfig> {
 
   public AlipayIdentityProvider(
       KeycloakSession session, AlipayOAuth2IdentityProviderConfig config) {

@@ -2,7 +2,7 @@ package org.keycloak.social.alipay;
 
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.broker.provider.AbstractIdentityProviderFactory;
-import org.keycloak.broker.social.SocialIdentityProviderFactory;
+import org.keycloak.broker.provider.IdentityProviderFactory;
 import org.keycloak.models.IdentityProviderModel;
 import org.keycloak.models.KeycloakSession;
 
@@ -15,7 +15,7 @@ import org.keycloak.models.KeycloakSession;
  */
 public class AlipayIdentityProviderFactory
     extends AbstractIdentityProviderFactory<AlipayIdentityProvider>
-    implements SocialIdentityProviderFactory<AlipayIdentityProvider> {
+    implements IdentityProviderFactory<AlipayIdentityProvider> {
 
   public static final String PROVIDER_ID = "alipay";
 

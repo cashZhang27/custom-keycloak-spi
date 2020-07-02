@@ -15,6 +15,7 @@ public class AlipayOAuth2IdentityProviderConfig extends OAuth2IdentityProviderCo
   private static final long serialVersionUID = 5730387260641871357L;
 
   public AlipayOAuth2IdentityProviderConfig() {
+    super();
   }
 
   public AlipayOAuth2IdentityProviderConfig(IdentityProviderModel model) {
@@ -27,5 +28,13 @@ public class AlipayOAuth2IdentityProviderConfig extends OAuth2IdentityProviderCo
 
   public void setKey(String key) {
     this.getConfig().put("key", key);
+  }
+
+  public String getAppCertContent() {
+    return this.getConfig().get("appCertContent");
+  }
+
+  public String getRootCertContent() {
+    return this.getConfig().get("rootCertContent");
   }
 }

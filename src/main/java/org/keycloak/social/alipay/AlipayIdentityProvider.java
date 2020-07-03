@@ -5,7 +5,9 @@ import com.alipay.api.AlipayClient;
 import com.alipay.api.CertAlipayRequest;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.request.AlipaySystemOauthTokenRequest;
+import com.alipay.api.request.AlipayUserInfoShareRequest;
 import com.alipay.api.response.AlipaySystemOauthTokenResponse;
+import com.alipay.api.response.AlipayUserInfoShareResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -23,7 +25,6 @@ import org.keycloak.broker.provider.AuthenticationRequest;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
 import org.keycloak.broker.provider.IdentityProvider;
-import org.keycloak.broker.provider.util.SimpleHttp;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.events.Errors;
 import org.keycloak.events.EventBuilder;
@@ -32,17 +33,11 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.services.ErrorPage;
 import org.keycloak.services.messages.Messages;
-import org.keycloak.services.resources.admin.info.ServerInfoAdminResource;
-import org.keycloak.sessions.AuthenticationSessionModel;
-import org.keycloak.vault.VaultStringSecret;
-import twitter4j.Twitter;
-import twitter4j.TwitterFactory;
-import twitter4j.auth.RequestToken;
 
 /**
  * ALiPayIdentityProvider.
- * 实现IdentityProvider为theme\base\admin\resources\js\controllers\realm.js中removeUsedSocial方法及 {@link
- * ServerInfoAdminResource#setIdentityProviders(org.keycloak.representations.info.ServerInfoRepresentation)}
+ * 实现IdentityProvider为theme\base\admin\resources\js\controllers\realm.js中removeUsedSocial方法及.
+ * ServerInfoAdminResource#setIdentityProviders(org.keycloak.representations.info.ServerInfoRepresentation)
  * 可重复新增身份提供者.
  *
  * @author Cash Zhang
@@ -68,44 +63,71 @@ public class AlipayIdentityProvider
     return true;
   }
 
-  @Override
-  protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode node) {
-    return super.extractIdentityFromProfile(event, node);
-  }
-
-  @Override
-  public BrokeredIdentityContext getFederatedIdentity(String response) {
-    String accessToken =
-        this.extractTokenFromResponse(response, this.getAccessTokenResponseParameter());
-
-    if (accessToken == null) {
+  public BrokeredIdentityContext getFederatedIdentity(
+      AlipayClient alipayClient, AlipaySystemOauthTokenResponse alipaySystemOauthTokenResponse) {
+    if (!alipaySystemOauthTokenResponse.isSuccess()) {
       throw new IdentityBrokerException(
-          "No access token available in OAuth server response: " + response);
+          "No access token available in OAuth server response: " + alipaySystemOauthTokenResponse);
     }
+    BrokeredIdentityContext context = null;
+    try {
+      String accessToken = alipaySystemOauthTokenResponse.getAccessToken();
+      String userId = alipaySystemOauthTokenResponse.getUserId();
+      String expiresIn = alipaySystemOauthTokenResponse.getExpiresIn();
+      String refreshToken = alipaySystemOauthTokenResponse.getRefreshToken();
+      String template = " accessToken:%s \n alipayUserId:%s \n expiresIn:%s \n refreshToken:%s";
+      System.out.println(String.format(template, accessToken, userId, expiresIn, refreshToken));
+      AlipayUserInfoShareRequest infoShareRequest = new AlipayUserInfoShareRequest();
 
-    BrokeredIdentityContext context = this.doGetFederatedIdentity(accessToken);
-    context.getContextData().put(FEDERATED_ACCESS_TOKEN, accessToken);
+      AlipayUserInfoShareResponse alipayUserInfoShareResponse =
+          alipayClient.certificateExecute(infoShareRequest, accessToken);
+      JsonNode profile =
+          new ObjectMapper().readTree(mapper.writeValueAsString(alipayUserInfoShareResponse));
+      logger.info("get userInfo =" + profile.toString());
+      context = AlipayIdentityProvider.this.extractIdentityFromProfile(null, profile);
+      context
+          .getContextData()
+          .put(FEDERATED_ACCESS_TOKEN, alipaySystemOauthTokenResponse.getAccessToken());
+    } catch (IOException | AlipayApiException e) {
+      logger.error(e);
+    }
     return context;
   }
 
   @Override
   public Response performLogin(AuthenticationRequest request) {
-    try (VaultStringSecret vaultStringSecret =
-        this.session.vault().getStringSecret(this.getConfig().getClientSecret())) {
-      Twitter twitter = new TwitterFactory().getInstance();
-      twitter.setOAuthConsumer(
-          this.getConfig().getClientId(),
-          vaultStringSecret.get().orElse(this.getConfig().getClientSecret()));
-
-      URI uri = new URI(request.getRedirectUri() + "?state=" + request.getState().getEncoded());
-
-      RequestToken requestToken = twitter.getOAuthRequestToken(uri.toString());
-      AuthenticationSessionModel authSession = request.getAuthenticationSession();
-
-      // authSession.setAuthNote(TWITTER_TOKEN, requestToken.getToken());
-      // authSession.setAuthNote(TWITTER_TOKENSECRET, requestToken.getTokenSecret());
-
-      URI authenticationUrl = URI.create(requestToken.getAuthenticationURL());
+    try {
+      String aliPayApplicationType = this.getConfig().getAliPayApplicationType();
+      String url;
+      switch (aliPayApplicationType) {
+        case "web":
+          url =
+              AlipayIdentityConstants.WEB_AUTH_URL
+                  + "?app_id="
+                  + this.getConfig().getClientId()
+                  + "&scope="
+                  + request.getHttpRequest().getAttribute("scope")
+                  + "&state="
+                  + request.getState().getEncoded()
+                  + "&redirect_uri="
+                  + request.getRedirectUri();
+          break;
+        case "three_part":
+          url =
+              AlipayIdentityConstants.THREE_PART_AUTH_URL
+                  + "?app_id="
+                  + this.getConfig().getClientId()
+                  + "&application_type="
+                  + request.getHttpRequest().getAttribute("scope")
+                  + "&state="
+                  + request.getState().getEncoded()
+                  + "&redirect_uri="
+                  + request.getRedirectUri();
+          break;
+        default:
+          throw new UnsupportedOperationException();
+      }
+      URI authenticationUrl = URI.create(url);
 
       return Response.seeOther(authenticationUrl).build();
     } catch (Exception e) {
@@ -119,18 +141,12 @@ public class AlipayIdentityProvider
   }
 
   protected AlipaySystemOauthTokenResponse getRefreshTokenRequest(
-      AlipayClient alipayClient, String refreshToken) {
+      AlipayClient alipayClient, String refreshToken) throws AlipayApiException {
     AlipaySystemOauthTokenRequest alipaySystemOauthTokenRequest =
         new AlipaySystemOauthTokenRequest();
     alipaySystemOauthTokenRequest.setGrantType(OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
     alipaySystemOauthTokenRequest.setCode(refreshToken);
-    try {
-      return alipayClient.certificateExecute(alipaySystemOauthTokenRequest);
-    } catch (AlipayApiException e) {
-      // TODO
-      e.printStackTrace();
-    }
-    return null;
+    return alipayClient.certificateExecute(alipaySystemOauthTokenRequest);
   }
 
   protected class Endpoint {
@@ -139,17 +155,13 @@ public class AlipayIdentityProvider
     protected RealmModel realm;
     protected EventBuilder event;
 
-    @Context
-    protected KeycloakSession session;
+    @Context protected KeycloakSession session;
 
-    @Context
-    protected ClientConnection clientConnection;
+    @Context protected ClientConnection clientConnection;
 
-    @Context
-    protected HttpHeaders headers;
+    @Context protected HttpHeaders headers;
 
-    @Context
-    protected UriInfo uriInfo;
+    @Context protected UriInfo uriInfo;
 
     public Endpoint(AuthenticationCallback callback, RealmModel realm, EventBuilder event) {
       this.callback = callback;
@@ -181,21 +193,20 @@ public class AlipayIdentityProvider
           authCode);
 
       try {
-        BrokeredIdentityContext federatedIdentity = null;
+        BrokeredIdentityContext federatedIdentity;
         if (authCode != null) {
-          AlipayClient alipayClient = this.generateAlipayClient(appId);
+          AlipayClient alipayClient = this.generateAlipayClient();
           AlipaySystemOauthTokenResponse alipaySystemOauthTokenResponse =
               this.generateTokenRequest(alipayClient, authCode);
-          // String response = this.generateTokenRequest(authorizationCode, wechatFlag).asString();
-          // logger.info("response=" + response);
-          // federatedIdentity =
-          //     ALiPayIdentityProvider.this.getFederatedIdentity(response, wechatFlag);
-          //
-          // if (ALiPayIdentityProvider.this.getConfig().isStoreToken()) {
-          //   if (federatedIdentity.getToken() == null) {
-          //     federatedIdentity.setToken(response);
-          //   }
-          // }
+          federatedIdentity =
+              AlipayIdentityProvider.this.getFederatedIdentity(
+                  alipayClient, alipaySystemOauthTokenResponse);
+
+          if (AlipayIdentityProvider.this.getConfig().isStoreToken()) {
+            if (federatedIdentity.getToken() == null) {
+              federatedIdentity.setToken(alipaySystemOauthTokenResponse.getAccessToken());
+            }
+          }
 
           federatedIdentity.setIdpConfig(AlipayIdentityProvider.this.getConfig());
           federatedIdentity.setIdp(AlipayIdentityProvider.this);
@@ -215,71 +226,26 @@ public class AlipayIdentityProvider
           Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
     }
 
-    public AlipayClient generateAlipayClient(String appId) {
-      try (VaultStringSecret vaultPrivateKeySecret =
-          this.session
-              .vault()
-              .getStringSecret(AlipayIdentityProvider.this.getConfig().getClientSecret())) {
-        CertAlipayRequest certAlipayRequest = new CertAlipayRequest();
-        certAlipayRequest.setServerUrl(AlipayIdentityConstants.SERVER_URL);
-        certAlipayRequest.setAppId(appId);
-        certAlipayRequest.setPrivateKey(
-            vaultPrivateKeySecret
-                .get()
-                .orElse(AlipayIdentityProvider.this.getConfig().getClientSecret()));
-        certAlipayRequest.setFormat(AlipayIdentityConstants.ALIPAY_FORMAT);
-        certAlipayRequest.setCharset(StandardCharsets.UTF_8.displayName());
-        certAlipayRequest.setSignType(AlipayIdentityConstants.ALIPAY_SIGN_TYPE);
+    public AlipayClient generateAlipayClient() throws AlipayApiException {
+      CertAlipayRequest certAlipayRequest = new CertAlipayRequest();
+      certAlipayRequest.setServerUrl(AlipayConstants.SERVER_URL);
+      certAlipayRequest.setAppId(AlipayIdentityProvider.this.getConfig().getClientId());
+      certAlipayRequest.setPrivateKey(AlipayIdentityProvider.this.getConfig().getAppPrivateKey());
+      certAlipayRequest.setFormat(AlipayConstants.FORMAT_JSON);
+      certAlipayRequest.setCharset(StandardCharsets.UTF_8.displayName());
+      certAlipayRequest.setSignType(AlipayConstants.SIGN_TYPE);
 
-        return new DefaultAlipayClient(certAlipayRequest);
-      } catch (AlipayApiException e) {
-        e.printStackTrace();
-      }
-      return null;
+      return new DefaultAlipayClient(certAlipayRequest);
     }
 
     private AlipaySystemOauthTokenResponse generateTokenRequest(
-        AlipayClient alipayClient, String authCode) {
+        AlipayClient alipayClient, String authCode) throws AlipayApiException {
       AlipaySystemOauthTokenRequest alipaySystemOauthTokenRequest =
           new AlipaySystemOauthTokenRequest();
       alipaySystemOauthTokenRequest.setGrantType(OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
       alipaySystemOauthTokenRequest.setCode(authCode);
-      try {
-        return alipayClient.certificateExecute(alipaySystemOauthTokenRequest);
-      } catch (AlipayApiException e) {
-        // TODO
-        e.printStackTrace();
-      }
-      return null;
-    }
 
-    public BrokeredIdentityContext getFederatedIdentity(String response, boolean wechat) {
-      String accessToken =
-          AlipayIdentityProvider.this.extractTokenFromResponse(
-              response, AlipayIdentityProvider.this.getAccessTokenResponseParameter());
-      if (accessToken == null) {
-        throw new IdentityBrokerException(
-            "No access token available in OAuth server response: " + response);
-      }
-      BrokeredIdentityContext context = null;
-      try {
-        JsonNode profile;
-        if (wechat) {
-          String openid = AlipayIdentityProvider.this.extractTokenFromResponse(response, "openid");
-          String url = "PROFILE_URL".replace("ACCESS_TOKEN", accessToken).replace("OPENID", openid);
-          // String url  ,= PROFILE_URL.replace("ACCESS_TOKEN", accessToken).replace("OPENID",
-          // openid);
-          profile = SimpleHttp.doGet(url, this.session).asJson();
-        } else {
-          profile = new ObjectMapper().readTree(response);
-        }
-        logger.info("get userInfo =" + profile.toString());
-        context = AlipayIdentityProvider.this.extractIdentityFromProfile(null, profile);
-      } catch (IOException e) {
-        logger.error(e);
-      }
-      context.getContextData().put(FEDERATED_ACCESS_TOKEN, accessToken);
-      return context;
+      return alipayClient.certificateExecute(alipaySystemOauthTokenRequest);
     }
   }
 }

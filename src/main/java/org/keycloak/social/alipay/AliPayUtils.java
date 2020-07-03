@@ -1,6 +1,5 @@
 package org.keycloak.social.alipay;
 
-import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.StreamUtil;
 import com.alipay.api.internal.util.StringUtils;
 import com.alipay.api.internal.util.codec.Base64;
@@ -17,7 +16,6 @@ import java.security.PrivateKey;
 import java.security.Security;
 import java.security.Signature;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -47,13 +45,13 @@ public class AliPayUtils {
     Security.addProvider(provider);
   }
 
-  public static X509Certificate getCertFromContent(String certContent) throws AlipayApiException {
+  public static X509Certificate getCertFromContent(String certContent) {
     try {
       InputStream inputStream = new ByteArrayInputStream(certContent.getBytes());
       CertificateFactory cf = CertificateFactory.getInstance("X.509", "BC");
       return (X509Certificate) cf.generateCertificate(inputStream);
     } catch (Exception e) {
-      throw new AlipayApiException(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -105,12 +103,16 @@ public class AliPayUtils {
     return rootCertSN;
   }
 
-  private static X509Certificate[] readPemCertChain(String cert) throws CertificateException {
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(cert.getBytes());
-    CertificateFactory factory = CertificateFactory.getInstance("X.509", provider);
-    Collection<? extends Certificate> certificates = factory.generateCertificates(inputStream);
+  private static X509Certificate[] readPemCertChain(String cert) {
+    try {
+      ByteArrayInputStream inputStream = new ByteArrayInputStream(cert.getBytes());
+      CertificateFactory cf = CertificateFactory.getInstance("X.509", "BC");
+      Collection<? extends Certificate> certificates = cf.generateCertificates(inputStream);
 
-    return certificates.toArray(new X509Certificate[0]);
+      return certificates.toArray(new X509Certificate[0]);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static String fillMD5(String md5) {

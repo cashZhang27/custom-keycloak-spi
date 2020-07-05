@@ -10,6 +10,7 @@ import com.alipay.api.response.AlipaySystemOauthTokenResponse;
 import com.alipay.api.response.AlipayUserInfoShareResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +21,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import org.apache.commons.io.FileUtils;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
 import org.keycloak.broker.provider.AuthenticationRequest;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
@@ -226,15 +228,23 @@ public class AlipayIdentityProvider
           Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
     }
 
-    public AlipayClient generateAlipayClient() throws AlipayApiException {
+    public AlipayClient generateAlipayClient() throws AlipayApiException, IOException {
       CertAlipayRequest certAlipayRequest = new CertAlipayRequest();
       certAlipayRequest.setServerUrl(AlipayConstants.SERVER_URL);
       certAlipayRequest.setAppId(AlipayIdentityProvider.this.getConfig().getClientId());
-      certAlipayRequest.setPrivateKey(AlipayIdentityProvider.this.getConfig().getAppPrivateKey());
+      String privateKey =
+          FileUtils.readFileToString(
+              new File(AlipayIdentityProvider.this.getConfig().getAppPrivateKeyPath()),
+              StandardCharsets.UTF_8.displayName());
+      certAlipayRequest.setPrivateKey(privateKey);
       certAlipayRequest.setFormat(AlipayConstants.FORMAT_JSON);
       certAlipayRequest.setCharset(StandardCharsets.UTF_8.displayName());
       certAlipayRequest.setSignType(AlipayConstants.SIGN_TYPE);
-
+      certAlipayRequest.setCertPath(AlipayIdentityProvider.this.getConfig().getAppCertPath());
+      certAlipayRequest.setAlipayPublicCertPath(
+          AlipayIdentityProvider.this.getConfig().getAlipayPublicCertPath());
+      certAlipayRequest.setRootCertPath(
+          AlipayIdentityProvider.this.getConfig().getAliPayRootCertPath());
       return new DefaultAlipayClient(certAlipayRequest);
     }
 

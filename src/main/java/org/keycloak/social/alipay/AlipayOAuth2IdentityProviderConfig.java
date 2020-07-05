@@ -58,12 +58,28 @@ public class AlipayOAuth2IdentityProviderConfig extends OAuth2IdentityProviderCo
     this.setKey("appCertContent", appCertContent);
   }
 
+  public String getAppCertPath() {
+    return this.getKey("appCertPath");
+  }
+
+  public void setAppCertPath(String appCertPath) {
+    this.setKey("appCertPath", appCertPath);
+  }
+
   public String getAliPayRootCertContent() {
     return this.getKey("aliPayRootCertContent");
   }
 
   public void setAliPayRootCertContent(String aliPayRootCertContent) {
     this.setKey("aliPayRootCertContent", aliPayRootCertContent);
+  }
+
+  public String getAliPayRootCertPath() {
+    return this.getKey("aliPayRootCertPath");
+  }
+
+  public void setAliPayRootCertPath(String aliPayRootCertPath) {
+    this.setKey("aliPayRootCertPath", aliPayRootCertPath);
   }
 
   public String getAppPrivateKey() {
@@ -74,11 +90,35 @@ public class AlipayOAuth2IdentityProviderConfig extends OAuth2IdentityProviderCo
     this.setKey("appPrivateKey", appPrivateKey);
   }
 
+  public String getAppPrivateKeyPath() {
+    return this.getKey("appPrivateKeyPath");
+  }
+
+  public void setAppPrivateKeyPath(String appPrivateKeyPath) {
+    this.setKey("appPrivateKeyPath", appPrivateKeyPath);
+  }
+
   public String getAliPayApplicationType() {
     return this.getKey("aliPayApplicationType");
   }
 
   public void setAliPayApplicationType(String aliPayApplicationType) {
     this.setKey("aliPayApplicationType", aliPayApplicationType);
+  }
+
+  public String getAlipayPublicCertPath() {
+    return this.getKey("alipayPublicCertPath");
+  }
+
+  public void setAlipayPublicCertPath(String alipayPublicCertPath) {
+    this.setKey("alipayPublicCertPath", alipayPublicCertPath);
+  }
+
+  public String getAlipayPublicCertContent() {
+    return this.getKey("alipayPublicCertContent");
+  }
+
+  public void setAlipayPublicCertContent(String alipayPublicCertContent) {
+    this.setKey("alipayPublicCertContent", alipayPublicCertContent);
   }
 }

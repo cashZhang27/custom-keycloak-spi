@@ -32,12 +32,6 @@
       <version>${keycloak.version}</version>
     </dependency>
     <dependency>
-      <artifactId>jboss-logging</artifactId>
-      <groupId>org.jboss.logging</groupId>
-      <scope>provided</scope>
-      <version>${jboss.logging.version}</version>
-    </dependency>
-    <dependency>
       <artifactId>keycloak-server-spi-private</artifactId>
       <groupId>org.keycloak</groupId>
       <scope>provided</scope>
@@ -56,12 +50,6 @@
       <version>${keycloak.version}</version>
     </dependency>
     <dependency>
-      <artifactId>httpclient</artifactId>
-      <groupId>org.apache.httpcomponents</groupId>
-      <scope>provided</scope>
-      <version>${apache.httpcomponents.version}</version>
-    </dependency>
-    <dependency>
       <artifactId>alipay-sdk-java</artifactId>
       <groupId>com.alipay.sdk</groupId>
       <version>${alipay-sdk-java.version}</version>
@@ -70,7 +58,7 @@
 
   <groupId>com.cashzhang27</groupId>
   <modelVersion>4.0.0</modelVersion>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
   <pluginRepositories>
     <!-- aliyun agent spring plugin repository -->

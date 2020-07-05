@@ -73,7 +73,6 @@
 
   <properties>
     <alipay-sdk-java.version>4.10.29.ALL</alipay-sdk-java.version>
-    <apache.httpcomponents.version>4.5.11</apache.httpcomponents.version>
     <com.google.guava.version>25.0-jre</com.google.guava.version>
     <jboss-jaxrs-api_2.1_spec>2.0.1.Final</jboss-jaxrs-api_2.1_spec>
     <jboss.logging.version>3.4.1.Final</jboss.logging.version>
@@ -110,6 +109,6 @@
     </repository>
   </repositories>
 
-  <version>0.0.1</version>
+  <version>0.0.2-SNAPSHOT</version>
 
 </project>

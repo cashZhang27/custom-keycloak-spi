@@ -1,6 +1,5 @@
 package org.keycloak.social.alipay;
 
-import java.security.cert.X509Certificate;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.models.IdentityProviderModel;
 
@@ -31,33 +30,6 @@ public class AlipayOAuth2IdentityProviderConfig extends OAuth2IdentityProviderCo
     this.getConfig().put(key, value);
   }
 
-  public String getAppCertSN() {
-    return this.getKey("appCertSN");
-  }
-
-  public void setAppCertSN(String appCertContent) {
-    X509Certificate x509Certificate = AliPayUtils.getCertFromContent(appCertContent);
-    String appCertSN = AliPayUtils.getCertSN(x509Certificate);
-    this.setKey("appCertSN", appCertSN);
-  }
-
-  public String getAlipayRootCertSN() {
-    return this.getKey("aliPayRootCertSN");
-  }
-
-  public void setAlipayRootCertSN(String aliPayRootCertContent) {
-    String aliPayRootCertSN = AliPayUtils.getRootCertSN(aliPayRootCertContent);
-    this.setKey("aliPayRootCertSN", aliPayRootCertSN);
-  }
-
-  public String getAppCertContent() {
-    return this.getKey("appCertContent");
-  }
-
-  public void setAppCertContent(String appCertContent) {
-    this.setKey("appCertContent", appCertContent);
-  }
-
   public String getAppCertPath() {
     return this.getKey("appCertPath");
   }
@@ -80,14 +52,6 @@ public class AlipayOAuth2IdentityProviderConfig extends OAuth2IdentityProviderCo
 
   public void setAliPayRootCertPath(String aliPayRootCertPath) {
     this.setKey("aliPayRootCertPath", aliPayRootCertPath);
-  }
-
-  public String getAppPrivateKey() {
-    return this.getKey("appPrivateKey");
-  }
-
-  public void setAppPrivateKey(String appPrivateKey) {
-    this.setKey("appPrivateKey", appPrivateKey);
   }
 
   public String getAppPrivateKeyPath() {

@@ -21,7 +21,7 @@ public class AlipayIdentityProviderFactory
 
   @Override
   public String getName() {
-    return "ALiPay";
+    return "Alipay";
   }
 
   @Override

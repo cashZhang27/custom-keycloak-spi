@@ -28,25 +28,21 @@
     <dependency>
       <artifactId>keycloak-core</artifactId>
       <groupId>org.keycloak</groupId>
-      <scope>provided</scope>
       <version>${keycloak.version}</version>
     </dependency>
     <dependency>
       <artifactId>keycloak-server-spi-private</artifactId>
       <groupId>org.keycloak</groupId>
-      <scope>provided</scope>
       <version>${keycloak.version}</version>
     </dependency>
     <dependency>
       <artifactId>keycloak-services</artifactId>
       <groupId>org.keycloak</groupId>
-      <scope>provided</scope>
       <version>${keycloak.version}</version>
     </dependency>
     <dependency>
       <artifactId>keycloak-server-spi</artifactId>
       <groupId>org.keycloak</groupId>
-      <scope>provided</scope>
       <version>${keycloak.version}</version>
     </dependency>
     <dependency>
@@ -78,6 +74,8 @@
   <properties>
     <alipay-sdk-java.version>4.10.29.ALL</alipay-sdk-java.version>
     <apache.httpcomponents.version>4.5.11</apache.httpcomponents.version>
+    <com.google.guava.version>25.0-jre</com.google.guava.version>
+    <jboss-jaxrs-api_2.1_spec>2.0.1.Final</jboss-jaxrs-api_2.1_spec>
     <jboss.logging.version>3.4.1.Final</jboss.logging.version>
     <jdk.version>1.8</jdk.version>
     <keycloak.version>10.0.2</keycloak.version>
@@ -112,6 +110,6 @@
     </repository>
   </repositories>
 
-  <version>1.0-SNAPSHOT</version>
+  <version>0.0.1</version>
 
 </project>

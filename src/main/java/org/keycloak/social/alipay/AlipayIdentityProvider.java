@@ -10,10 +10,14 @@ import com.alipay.api.response.AlipaySystemOauthTokenResponse;
 import com.alipay.api.response.AlipayUserInfoShareResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
+import com.google.common.io.CharSource;
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.QueryParam;
@@ -21,8 +25,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import org.apache.commons.io.FileUtils;
+import org.jboss.logging.Logger;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
+import org.keycloak.broker.oidc.mappers.AbstractJsonUserAttributeMapper;
 import org.keycloak.broker.provider.AuthenticationRequest;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
@@ -50,6 +55,8 @@ public class AlipayIdentityProvider
     extends AbstractOAuth2IdentityProvider<AlipayOAuth2IdentityProviderConfig>
     implements IdentityProvider<AlipayOAuth2IdentityProviderConfig> {
 
+  private static final Logger logger = Logger.getLogger(AlipayIdentityProvider.class);
+
   public AlipayIdentityProvider(
       KeycloakSession session, AlipayOAuth2IdentityProviderConfig config) {
     super(session, config);
@@ -57,7 +64,7 @@ public class AlipayIdentityProvider
 
   @Override
   public Object callback(RealmModel realm, AuthenticationCallback callback, EventBuilder event) {
-    return super.callback(realm, callback, event);
+    return new Endpoint(callback, realm, event);
   }
 
   @Override
@@ -78,7 +85,7 @@ public class AlipayIdentityProvider
       String expiresIn = alipaySystemOauthTokenResponse.getExpiresIn();
       String refreshToken = alipaySystemOauthTokenResponse.getRefreshToken();
       String template = " accessToken:%s \n alipayUserId:%s \n expiresIn:%s \n refreshToken:%s";
-      System.out.println(String.format(template, accessToken, userId, expiresIn, refreshToken));
+      logger.info(String.format(template, accessToken, userId, expiresIn, refreshToken));
       AlipayUserInfoShareRequest infoShareRequest = new AlipayUserInfoShareRequest();
 
       AlipayUserInfoShareResponse alipayUserInfoShareResponse =
@@ -97,6 +104,35 @@ public class AlipayIdentityProvider
   }
 
   @Override
+  protected BrokeredIdentityContext extractIdentityFromProfile(
+      EventBuilder event, JsonNode profile) {
+    String userId = this.getJsonProperty(profile, "userId");
+    BrokeredIdentityContext user = new BrokeredIdentityContext(userId);
+
+    String email = this.getJsonProperty(profile, "email");
+    if (Objects.nonNull(email)) {
+      user.setUsername(email);
+      user.setEmail(email);
+    }
+    String mobile = this.getJsonProperty(profile, "mobile");
+    if (Objects.nonNull(mobile)) {
+      user.setUsername(mobile);
+    }
+    if (Objects.isNull(user.getUsername())) {
+      user.setUsername(userId);
+    }
+    user.setBrokerUserId(userId);
+    user.setName(this.getJsonProperty(profile, "userName"));
+    user.setIdpConfig(this.getConfig());
+    user.setIdp(this);
+
+    AbstractJsonUserAttributeMapper.storeUserProfileForMapper(
+        user, profile, this.getConfig().getAlias());
+
+    return user;
+  }
+
+  @Override
   public Response performLogin(AuthenticationRequest request) {
     try {
       String aliPayApplicationType = this.getConfig().getAliPayApplicationType();
@@ -108,7 +144,7 @@ public class AlipayIdentityProvider
                   + "?app_id="
                   + this.getConfig().getClientId()
                   + "&scope="
-                  + request.getHttpRequest().getAttribute("scope")
+                  + this.getConfig().getDefaultScope()
                   + "&state="
                   + request.getState().getEncoded()
                   + "&redirect_uri="
@@ -130,7 +166,6 @@ public class AlipayIdentityProvider
           throw new UnsupportedOperationException();
       }
       URI authenticationUrl = URI.create(url);
-
       return Response.seeOther(authenticationUrl).build();
     } catch (Exception e) {
       throw new IdentityBrokerException("Could send authentication request to twitter.", e);
@@ -140,15 +175,6 @@ public class AlipayIdentityProvider
   @Override
   protected String getDefaultScopes() {
     return AlipayIdentityConstants.DEFAULT_SCOPE;
-  }
-
-  protected AlipaySystemOauthTokenResponse getRefreshTokenRequest(
-      AlipayClient alipayClient, String refreshToken) throws AlipayApiException {
-    AlipaySystemOauthTokenRequest alipaySystemOauthTokenRequest =
-        new AlipaySystemOauthTokenRequest();
-    alipaySystemOauthTokenRequest.setGrantType(OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
-    alipaySystemOauthTokenRequest.setCode(refreshToken);
-    return alipayClient.certificateExecute(alipaySystemOauthTokenRequest);
   }
 
   protected class Endpoint {
@@ -183,24 +209,17 @@ public class AlipayIdentityProvider
         @DefaultValue("") @QueryParam(AlipayIdentityConstants.ALIPAY_PARAMETER_ALIPAY_TOKEN)
             String alipayToken,
         @QueryParam(AlipayIdentityConstants.ALIPAY_PARAMETER_AUTH_CODE) String authCode) {
-
-      logger.infov(
-          AlipayIdentityConstants.APLIPAY_CALLBACK_TEMPLATE_LOG,
-          state,
-          appId,
-          source,
-          userOutputs,
-          scope,
-          alipayToken,
-          authCode);
+      logger.info(
+          String.format(
+              "state=%s,app_id=%s,source=%s,userOutputs=%s,scope=%s,alipay_token=%s,auth_code=%s",
+              state, appId, source, userOutputs, scope, alipayToken, authCode));
 
       try {
-        BrokeredIdentityContext federatedIdentity;
         if (authCode != null) {
           AlipayClient alipayClient = this.generateAlipayClient();
           AlipaySystemOauthTokenResponse alipaySystemOauthTokenResponse =
               this.generateTokenRequest(alipayClient, authCode);
-          federatedIdentity =
+          BrokeredIdentityContext federatedIdentity =
               AlipayIdentityProvider.this.getFederatedIdentity(
                   alipayClient, alipaySystemOauthTokenResponse);
 
@@ -230,16 +249,17 @@ public class AlipayIdentityProvider
 
     public AlipayClient generateAlipayClient() throws AlipayApiException, IOException {
       CertAlipayRequest certAlipayRequest = new CertAlipayRequest();
-      certAlipayRequest.setServerUrl(AlipayConstants.SERVER_URL);
+      certAlipayRequest.setServerUrl(AlipayIdentityConstants.SERVER_URL);
       certAlipayRequest.setAppId(AlipayIdentityProvider.this.getConfig().getClientId());
-      String privateKey =
-          FileUtils.readFileToString(
+      CharSource charSource =
+          Files.asCharSource(
               new File(AlipayIdentityProvider.this.getConfig().getAppPrivateKeyPath()),
-              StandardCharsets.UTF_8.displayName());
+              Charsets.UTF_8);
+      String privateKey = charSource.read();
       certAlipayRequest.setPrivateKey(privateKey);
-      certAlipayRequest.setFormat(AlipayConstants.FORMAT_JSON);
+      certAlipayRequest.setFormat(AlipayIdentityConstants.FORMAT_JSON);
       certAlipayRequest.setCharset(StandardCharsets.UTF_8.displayName());
-      certAlipayRequest.setSignType(AlipayConstants.SIGN_TYPE);
+      certAlipayRequest.setSignType(AlipayIdentityConstants.SIGN_TYPE_RSA2);
       certAlipayRequest.setCertPath(AlipayIdentityProvider.this.getConfig().getAppCertPath());
       certAlipayRequest.setAlipayPublicCertPath(
           AlipayIdentityProvider.this.getConfig().getAlipayPublicCertPath());
